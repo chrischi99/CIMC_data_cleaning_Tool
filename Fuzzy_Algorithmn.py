@@ -17,19 +17,46 @@ label1 = tk.Label(root, text='模糊搜索工具', bg = 'lightsteelblue2')
 label1.config(font=('helvetica', 20))
 canvas1.create_window(250, 120, window=label1)
 
-# User input a csv file
-def getCSV():
+#User input a Excel file
+def getExcel ():
     global read_file
+    global import_file_path
     import_file_path = filedialog.askopenfilename()
-    read_file = pd.read_csv(import_file_path)
+    try:
+        read_file = pd.read_excel(import_file_path)
+        messagebox.showinfo("文件上传", "文件上传成功")
+    except NameError:
+        messagebox.showinfo("文件上传", "文件上传失败")
+        
+    
 
 # Upload button
-browseButton_CSV = tk.Button(text="      上传CSV文件     ", command=getCSV, bg='green', fg='black', font=('helvetica', 12, 'bold'))
-canvas1.create_window(250, 180, window=browseButton_CSV)
+browseButton_Excel = tk.Button(text="      上传Excel文件     ", command=getExcel, bg='green', fg='black', font=('helvetica', 12, 'bold'))
+canvas1.create_window(250, 180, window=browseButton_Excel)
+
+# User input a csv file
+# def getCSV():
+#     global read_file
+#     global import_file_path
+#     import_file_path = filedialog.askopenfilename()
+#     try:
+#         read_file = pd.read_csv(import_file_path)
+#         messagebox.showinfo("文件上传", "文件上传成功")
+#     except NameError:
+#         messagebox.showinfo("文件上传", "文件上传失败")
+
+# # Upload button
+# browseButton_CSV = tk.Button(text="      上传CSV文件     ", command=getCSV, bg='green', fg='black', font=('helvetica', 12, 'bold'))
+# canvas1.create_window(250, 250, window=browseButton_CSV)
 
 # Fuzzy Search
 def convertToExcel():
     global read_file
+    global import_file_path
+    try:
+        read_file
+    except NameError:
+        messagebox.showinfo("未发现文件", "未发现文件!请上传文件")
     result_list = []
     # Setup the Solr instance from the database 
     solr = pysolr.Solr('http://localhost:8983/solr/CIMC/', timeout=10)
@@ -38,7 +65,6 @@ def convertToExcel():
     solr.ping()
     # Iterate through the csv file
     for i in read_file['id']:
-        print(i)
         # Preparation for exact match
         company_name = 'name:"'+i+'"'
         #Exact match search
@@ -67,14 +93,66 @@ def convertToExcel():
                         result_list.append(result["id"])
                 count += 1
 
-    #Export the results to a csv file
+    #Export the results to a excel file
     read_file["模糊搜索结果"] = result_list
     export_file_path = filedialog.asksaveasfilename(defaultextension='.xlsx')
     read_file.to_excel (export_file_path, index = None, header=True)
+    messagebox.showinfo("模糊搜索", "模糊搜索成功")
 
 # Fuzzy Search button
-saveAsButton_Excel = tk.Button(text='模糊搜索', command=convertToExcel, bg='green', fg='black', font=('helvetica', 12, 'bold'))
+saveAsButton_Excel = tk.Button(text='模糊搜索（新文件）', command=convertToExcel, bg='green', fg='black', font=('helvetica', 12, 'bold'))
 canvas1.create_window(250, 250, window=saveAsButton_Excel)
+
+def convertToExcel_2():
+    global read_file
+    global import_file_path
+    try:
+        read_file
+    except NameError:
+        messagebox.showinfo("未发现文件", "未发现文件!请上传文件")
+    result_list = []
+    # Setup the Solr instance from the database 
+    solr = pysolr.Solr('http://localhost:8983/solr/CIMC/', timeout=10)
+
+    # Do a health check.
+    solr.ping()
+    # Iterate through the csv file
+    for i in read_file['id']:
+        # Preparation for exact match
+        company_name = 'name:"'+i+'"'
+        #Exact match search
+        results = solr.search(company_name)
+        exact_search_num = len(results)
+        if (exact_search_num == 1):
+            for result in results:
+                # Edge cases
+                if ("龙口中集" in result["id"]):
+                    print('loingkou')
+                    result_list.append("Longkou CIMC Raffles Offshore Ltd")
+                else:
+                    result_list.append(result["id"])
+    
+        else:
+            # Perform a Fuzzy search on the database
+            company_name_2 = "name:"+ i
+            results = solr.search(company_name_2)
+            count = 0
+            for result in results:
+                if count < 1:
+                    # Edge cases
+                    if ("龙口" in i):
+                        result_list.append("Longkou CIMC Raffles Offshore Ltd")
+                    else:
+                        result_list.append(result["id"])
+                count += 1
+
+    #Export the results to a excel file
+    read_file["模糊搜索结果"] = result_list
+    read_file.to_excel(import_file_path, index = None, header=True)
+    messagebox.showinfo("模糊搜索", "模糊搜索成功")
+
+saveAsButton_Excel_2 = tk.Button(text='模糊搜索', command=convertToExcel_2, bg='green', fg='black', font=('helvetica', 12, 'bold'))
+canvas1.create_window(250, 320, window=saveAsButton_Excel_2)
 
 # Exit application function
 def exitApplication():
@@ -83,8 +161,8 @@ def exitApplication():
        root.destroy()
 
 # Exit button
-exitButton = tk.Button (root, text='       退出程序     ',command=exitApplication, bg='brown', fg='black', font=('helvetica', 12, 'bold'))
-canvas1.create_window(250, 320, window=exitButton)
+exitButton = tk.Button (root, text='       退出程序     ',command=exitApplication, bg='brown', fg='red', font=('helvetica', 12, 'bold'))
+canvas1.create_window(250, 390, window=exitButton)
 
 # Repeat the mainloop to prevent exit
 root.mainloop()
