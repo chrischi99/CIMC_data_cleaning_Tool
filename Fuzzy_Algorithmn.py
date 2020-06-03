@@ -5,6 +5,7 @@ import pandas as pd
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
+from tkinter import simpledialog
 
 root= tk.Tk()
 
@@ -57,6 +58,9 @@ def convertToExcel():
         read_file
     except NameError:
         messagebox.showinfo("未发现文件", "未发现文件!请上传文件")
+
+    id_name = simpledialog.askstring(title = "柱子名称" , prompt = "请输入需要模糊查询的柱子名称")
+
     result_list = []
     # Setup the Solr instance from the database 
     solr = pysolr.Solr('http://localhost:8983/solr/CIMC/', timeout=10)
@@ -64,7 +68,7 @@ def convertToExcel():
     # Do a health check.
     solr.ping()
     # Iterate through the csv file
-    for i in read_file['id']:
+    for i in read_file[id_name]:
         # Preparation for exact match
         company_name = 'name:"'+i+'"'
         #Exact match search
@@ -73,11 +77,11 @@ def convertToExcel():
         if (exact_search_num == 1):
             for result in results:
                 # Edge cases
-                if ("龙口中集" in result["id"]):
+                if ("龙口中集" in result[id_name]):
                     print('loingkou')
                     result_list.append("Longkou CIMC Raffles Offshore Ltd")
                 else:
-                    result_list.append(result["id"])
+                    result_list.append(result[id_name])
     
         else:
             # Perform a Fuzzy search on the database
@@ -90,11 +94,12 @@ def convertToExcel():
                     if ("龙口" in i):
                         result_list.append("Longkou CIMC Raffles Offshore Ltd")
                     else:
-                        result_list.append(result["id"])
+                        result_list.append(result[id_name])
                 count += 1
 
     #Export the results to a excel file
-    read_file["模糊搜索结果"] = result_list
+    col_index = read_file.columns.get_loc(id_name)
+    read_file.insert(col_index+1,"模糊搜索结果", result_list)
     export_file_path = filedialog.asksaveasfilename(defaultextension='.xlsx')
     read_file.to_excel (export_file_path, index = None, header=True)
     messagebox.showinfo("模糊搜索", "模糊搜索成功")
@@ -110,6 +115,9 @@ def convertToExcel_2():
         read_file
     except NameError:
         messagebox.showinfo("未发现文件", "未发现文件!请上传文件")
+
+    id_name = simpledialog.askstring(title = "柱子名称" , prompt = "请输入需要模糊查询的柱子名称")
+
     result_list = []
     # Setup the Solr instance from the database 
     solr = pysolr.Solr('http://localhost:8983/solr/CIMC/', timeout=10)
@@ -117,7 +125,7 @@ def convertToExcel_2():
     # Do a health check.
     solr.ping()
     # Iterate through the csv file
-    for i in read_file['id']:
+    for i in read_file[id_name]:
         # Preparation for exact match
         company_name = 'name:"'+i+'"'
         #Exact match search
@@ -126,11 +134,11 @@ def convertToExcel_2():
         if (exact_search_num == 1):
             for result in results:
                 # Edge cases
-                if ("龙口中集" in result["id"]):
+                if ("龙口中集" in result[id_name]):
                     print('loingkou')
                     result_list.append("Longkou CIMC Raffles Offshore Ltd")
                 else:
-                    result_list.append(result["id"])
+                    result_list.append(result[id_name])
     
         else:
             # Perform a Fuzzy search on the database
@@ -143,11 +151,12 @@ def convertToExcel_2():
                     if ("龙口" in i):
                         result_list.append("Longkou CIMC Raffles Offshore Ltd")
                     else:
-                        result_list.append(result["id"])
+                        result_list.append(result[id_name])
                 count += 1
 
-    #Export the results to a excel file
-    read_file["模糊搜索结果"] = result_list
+   #Export the results to a excel file
+    col_index = read_file.columns.get_loc(id_name)
+    read_file.insert(col_index+1,"模糊搜索结果", result_list)
     read_file.to_excel(import_file_path, index = None, header=True)
     messagebox.showinfo("模糊搜索", "模糊搜索成功")
 
