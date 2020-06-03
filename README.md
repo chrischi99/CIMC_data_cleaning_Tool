@@ -1,4 +1,4 @@
-# CIMC_Intern_Fuzzy_Search_Tool
+# CIMC_data_cleaning__Tool
 
 Description: This is a data cleaning tool design to reduce the amount of time of manual ross-data checking of discrepancies of company names. It utilizes Apache Solr with Pysolr as its search engine and Fuzzy Search as its search algorithmn.
 
