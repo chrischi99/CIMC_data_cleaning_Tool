@@ -35,30 +35,20 @@ def getExcel ():
 browseButton_Excel = tk.Button(text="      上传Excel文件     ", command=getExcel, bg='green', fg='black', font=('helvetica', 12, 'bold'))
 canvas1.create_window(250, 180, window=browseButton_Excel)
 
-# User input a csv file
-# def getCSV():
-#     global read_file
-#     global import_file_path
-#     import_file_path = filedialog.askopenfilename()
-#     try:
-#         read_file = pd.read_csv(import_file_path)
-#         messagebox.showinfo("文件上传", "文件上传成功")
-#     except NameError:
-#         messagebox.showinfo("文件上传", "文件上传失败")
-
-# # Upload button
-# browseButton_CSV = tk.Button(text="      上传CSV文件     ", command=getCSV, bg='green', fg='black', font=('helvetica', 12, 'bold'))
-# canvas1.create_window(250, 250, window=browseButton_CSV)
-
 # Fuzzy Search
 def convertToExcel():
     global read_file
     global import_file_path
+    no_company = 0
     try:
         read_file
     except NameError:
         messagebox.showinfo("未发现文件", "未发现文件!请上传文件")
+    
+    print("number of index of the file")
+    print(len(read_file))
 
+        
     id_name = simpledialog.askstring(title = "柱子名称" , prompt = "请输入需要模糊查询的柱子名称")
 
     result_list = []
@@ -67,35 +57,57 @@ def convertToExcel():
 
     # Do a health check.
     solr.ping()
+    print(read_file)
     # Iterate through the csv file
     for i in read_file[id_name]:
         # Preparation for exact match
-        company_name = 'name:"'+i+'"'
+        Abbreviation_name = 'Abbreviation:"'+i+'"'
+        company_name = 'Name:"'+i+'"'
         #Exact match search
-        results = solr.search(company_name)
-        exact_search_num = len(results)
+        Abbreviation_results = solr.search(Abbreviation_name)
+        company_results = solr.search(company_name)
+        exact_search_num = len(company_results)
+        exact_search_num_2 = len(Abbreviation_results)
         if (exact_search_num == 1):
-            for result in results:
+            for result in company_results:
                 # Edge cases
-                if ("龙口中集" in result[id_name]):
+                if ("龙口中集" in i):
                     print('loingkou')
                     result_list.append("Longkou CIMC Raffles Offshore Ltd")
                 else:
-                    result_list.append(result[id_name])
-    
+                    result_list.append(result["Name"])
+        elif(exact_search_num_2 == 1):
+            for result in Abbreviation_results:
+                # Edge cases
+                if ("龙口中集" in i):
+                    print('loingkou')
+                    result_list.append("Longkou CIMC Raffles Offshore Ltd")
+                else:
+                    result_list.append(result["Name"])
         else:
             # Perform a Fuzzy search on the database
-            company_name_2 = "name:"+ i
+            Abbreviation_name_2 = "Abbreviation:"+ i
+            company_name_2 = "Name:"+ i
             results = solr.search(company_name_2)
             count = 0
+            if (len(results) == 0):
+                result_list.append("无此公司")
             for result in results:
                 if count < 1:
                     # Edge cases
                     if ("龙口" in i):
                         result_list.append("Longkou CIMC Raffles Offshore Ltd")
+                    elif("烟台海工" in i):
+                        result_list.append("中集海洋工程研究院有限公司")
+                    elif("4s"in i):
+                        result_list.append("无此公司")
                     else:
-                        result_list.append(result[id_name])
+                        result_list.append(result["Name"])
                 count += 1
+    print("result of the list")
+    print(len(result_list))
+    print("number of weird company")
+    print(no_company)
 
     #Export the results to a excel file
     col_index = read_file.columns.get_loc(id_name)
@@ -111,10 +123,31 @@ canvas1.create_window(250, 250, window=saveAsButton_Excel)
 def convertToExcel_2():
     global read_file
     global import_file_path
+    import_file_path = filedialog.askopenfilename()
+    try:
+        read_file = pd.read_excel(import_file_path)
+        messagebox.showinfo("文件上传", "文件上传成功")
+    except NameError:
+        messagebox.showinfo("文件上传", "文件上传失败")
+        
+    
+
+# Upload button
+browseButton_Excel = tk.Button(text="      上传Excel文件     ", command=getExcel, bg='green', fg='black', font=('helvetica', 12, 'bold'))
+canvas1.create_window(250, 180, window=browseButton_Excel)
+
+# Fuzzy Search
+def convertToExcel_2():
+    global read_file
+    global import_file_path
+    no_company = 0
     try:
         read_file
     except NameError:
         messagebox.showinfo("未发现文件", "未发现文件!请上传文件")
+    
+    print("number of index of the file")
+    print(len(read_file))
 
         
     id_name = simpledialog.askstring(title = "柱子名称" , prompt = "请输入需要模糊查询的柱子名称")
@@ -125,35 +158,57 @@ def convertToExcel_2():
 
     # Do a health check.
     solr.ping()
+    print(read_file)
     # Iterate through the csv file
     for i in read_file[id_name]:
         # Preparation for exact match
-        company_name = 'name:"'+i+'"'
+        Abbreviation_name = 'Abbreviation:"'+i+'"'
+        company_name = 'Name:"'+i+'"'
         #Exact match search
-        results = solr.search(company_name)
-        exact_search_num = len(results)
+        Abbreviation_results = solr.search(Abbreviation_name)
+        company_results = solr.search(company_name)
+        exact_search_num = len(company_results)
+        exact_search_num_2 = len(Abbreviation_results)
         if (exact_search_num == 1):
-            for result in results:
+            for result in company_results:
                 # Edge cases
-                if ("龙口中集" in result[id_name]):
+                if ("龙口中集" in i):
                     print('loingkou')
                     result_list.append("Longkou CIMC Raffles Offshore Ltd")
                 else:
-                    result_list.append(result[id_name])
-    
+                    result_list.append(result["Name"])
+        elif(exact_search_num_2 == 1):
+            for result in Abbreviation_results:
+                # Edge cases
+                if ("龙口中集" in i):
+                    print('loingkou')
+                    result_list.append("Longkou CIMC Raffles Offshore Ltd")
+                else:
+                    result_list.append(result["Name"])
         else:
             # Perform a Fuzzy search on the database
-            company_name_2 = "name:"+ i
+            Abbreviation_name_2 = "Abbreviation:"+ i
+            company_name_2 = "Name:"+ i
             results = solr.search(company_name_2)
             count = 0
+            if (len(results) == 0):
+                result_list.append("无此公司")
             for result in results:
                 if count < 1:
                     # Edge cases
                     if ("龙口" in i):
                         result_list.append("Longkou CIMC Raffles Offshore Ltd")
+                    elif("烟台海工" in i):
+                        result_list.append("中集海洋工程研究院有限公司")
+                    elif("4s"in i):
+                        result_list.append("无此公司")
                     else:
-                        result_list.append(result[id_name])
+                        result_list.append(result["Name"])
                 count += 1
+    print("result of the list")
+    print(len(result_list))
+    print("number of weird company")
+    print(no_company)
 
    #Export the results to a excel file
     col_index = read_file.columns.get_loc(id_name)
